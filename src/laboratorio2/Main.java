@@ -1,4 +1,4 @@
-package cliente;
+package laboratorio2;
 
 public class Main {
 

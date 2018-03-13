@@ -1,3 +1,5 @@
+package laboratorio2;
+
 import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,7 +27,7 @@ public class Data {
 		
 		//Open connection
 		conn = DriverManager.getConnection(
-				server + pAddress + ":" + pPort + "/" + pDB,
+				server+pAddress+":"+pPort + "/" + pDB,
 				pUser,pPass);
 		conn.setAutoCommit(true);
 		statement = conn.createStatement();
@@ -43,7 +45,7 @@ public class Data {
      * Método para realizar consultas del tipo: SELECT * FROM tabla WHERE..."*
      *************************************************************************/
      
-	public String[] executeQuery(String pQuery) {
+	public String[] consultaDatos(String pQuery) {
 		// se devuelve un vector de dos posiciones
 		// la primera posicion contiene el resultado de la consulta
 		// la segunda posicion contiene el número de filas que contiene dicho resultado
@@ -79,7 +81,7 @@ public class Data {
      * Método para realizar consultas de actualización, creación o eliminación (DROP,INSERT INTO, ALTER..., NO SELECT) * 
      *****************************************************************************************************************/
     
-    public String[] executeUpdate(String pSentence) {
+    public String[] consultaActualiza(String pSentence) {
 		// se devuelve un vector de dos posiciones
 		// la primera posicion siempre está vacía
 		// la segunda posicion contiene el número de filas afectadas por la operación

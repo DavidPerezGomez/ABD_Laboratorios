@@ -1,3 +1,5 @@
+package laboratorio3;
+
 import java.io.Console;
 import java.util.Random;
 
@@ -8,24 +10,17 @@ public class Main {
 	 */
 	public static void main(String[] args) {
         String addr, port, user, pass;
-	    if (args.length == 0) {
-            addr = "127.0.0.1";
-            port = "3306";
-            user = "auditorAB";
-            pass = "euiti";
-        } else {
-            addr = "127.0.0.1";
-            port = "3306";
-            user = "auditorAB";
-            pass = "euiti";
-        }
-        insertAuditAB(addr, port, user, pass);
-//        insertAuditCD(addr, port, user, pass);
+        addr = "10.109.91.128";
+        port = "8306";
+        user = "auditorCD";
+        pass = "euiti";
+//        insertAuditAB(addr, port, user, pass);
+        insertAuditCD(addr, port, user, pass);
     }
 
     private static void insertAuditAB(String pAddr, String pPort, String pUser, String pPass) {
         Data data = null;
-        String db = "auditAB";
+        String db = "auditingAB";
         try {
             data = new Data(pAddr, pPort, pUser, pPass, db);
         } catch (Exception e) {
@@ -39,13 +34,13 @@ public class Main {
         String[] commands = new String[]{
                 String.format("INSERT INTO %s VALUES(%s, %s);", tabla1, "%d", "%d"),
                 String.format("INSERT INTO %s VALUES(%s, %s);", tabla2, "%d", "%d")};
-        int iterations = 14900;
+        int iterations = 5000;
         executeCommands(data, commands, iterations);
     }
 
     private static void insertAuditCD(String pAddr, String pPort, String pUser, String pPass) {
         Data data = null;
-        String db = "auditCD";
+        String db = "auditingCD";
         try {
             data = new Data(pAddr, pPort, pUser, pPass, db);
         } catch (Exception e) {
@@ -59,7 +54,7 @@ public class Main {
         String[] commands = new String[]{
                 String.format("INSERT INTO %s VALUES(%s, %s);", tabla1, "%d", "%d"),
                 String.format("INSERT INTO %s VALUES(%s, %s);", tabla2, "%d", "%d")};
-        int iterations = 10;
+        int iterations = 10000;
         executeCommands(data, commands, iterations);
     }
 
@@ -89,9 +84,9 @@ public class Main {
 	    progress.append(" [");
         for (int i = 0; i < maxBars; i++) {
             if (i < currBars)
-                progress.append("█");
+                progress.append("%");
             else
-                progress.append(" ");
+                progress.append(".");
         }
         progress.append("]");
         return progress.toString();

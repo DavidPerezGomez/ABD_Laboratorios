@@ -1,18 +1,13 @@
 package laboratorio5.threads;
 
-import laboratorio5.Data;
+public class ThreadA extends CustomThread {
 
-public class ThreadA extends Thread {
-
-    private String name;
-    private Data data;
-
-    public ThreadA(boolean pMode) {
-        name = "A";
-        data = new Data(pMode);
+    public ThreadA(int pMode) {
+        super(pMode, "A");
     }
 
-    public void run() {
-//        TODO completar
+    @Override
+    public boolean myProcedure() {
+        return data.procedureA();
     }
 }

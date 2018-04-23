@@ -4,7 +4,7 @@ import laboratorio5.threads.*;
 
 public class Main {
 
-    static final int mode = Data.NONLOCKING;
+    static final int mode = Data.LOCKING;
     public static final int NUMBER_OF_ITERATIONS = 100;
     public static final int NUMBER_OF_THREADS = 6;
 

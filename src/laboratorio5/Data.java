@@ -1,7 +1,5 @@
 package laboratorio5;
 
-import sun.security.provider.SHA;
-
 import java.sql.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -13,7 +11,8 @@ public class Data {
     private String threadName;
 
     private String server = "jdbc:mysql://";
-    private String address = "192.168.56.11";
+//    private String address = "192.168.56.11";
+    private String address = "127.0.0.1";
     private String user = "test";
     private String port = "3306";
     private String password = "";
@@ -24,8 +23,9 @@ public class Data {
 
     public static final int NONLOCKING = 0;
     public static final int LOCKING = 1;
+
     public static final int SHARE_LOCKING = LOCKING;
-    public static final int EXCLUSIVE_LOCKING = 2*LOCKING;
+    public static final int EXCLUSIVE_LOCKING = 2 * LOCKING;
 
     static final String X = "X";
     static final String Y = "Y";
@@ -56,37 +56,22 @@ public class Data {
             Class.forName("org.gjt.mm.mysql.Driver");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-			System.exit(1);
+            System.exit(1);
         }
 
         // open connection
         try {
             conn = DriverManager.getConnection(
-				server+address+":"+port + "/" + database,
-				user,password);
+                    server + address + ":" + port + "/" + database,
+                    user, password);
+            conn.setAutoCommit(false);
             st = conn.createStatement();
         } catch (SQLException e) {
             e.printStackTrace();
-			System.exit(1);
+            System.exit(1);
         }
 
         threadName = pThreadName;
-    }
-
-    private void setTransaction() throws SQLException {
-        String sql = "SET GLOBAL TRANSACTION READ WRITE";
-        st.execute(sql);
-    }
-
-    private void startTransaction() throws SQLException {
-        String msg1 = String.format("%s --> Starting transaction", threadName);
-        String msg2 = String.format("%s --> Transaction started", threadName);
-        System.out.println(msg1);
-        String sql = "START TRANSACTION";
-        st.execute(sql);
-        sql = "SET autocommit=0;";
-        st.execute(sql);
-        System.out.println(msg2);
     }
 
     private int getValue(int pLockingMode, String pVariable) throws SQLException {
@@ -97,63 +82,81 @@ public class Data {
             mode = "FOR UPDATE";
         }
         String msg1 = String.format("%s --> Getting value of %s (%s)", threadName, pVariable, mode);
-        String msg2 = String.format("%s --> Finished getting value of %s (%s)", threadName, pVariable, mode);
-        String sql = "SELECT " + value_field + " FROM " + table_name + " WHERE " + name_field + "='" + pVariable + "' " + mode;
         System.out.println(msg1);
+        String sql = "SELECT " + value_field + " FROM " + table_name + " WHERE " + name_field + "='" + pVariable + "' " + mode;
         ResultSet res = st.executeQuery(sql);
-        System.out.println(msg2);
         res.next();
-        return res.getInt(value_field);
+        int result = res.getInt(value_field);
+        String msg2 = String.format("%s --> Finished getting value of %s (%s): %d", threadName, pVariable, mode, result);
+        System.out.println(msg2);
+        return result;
     }
 
     private boolean setValue(int pLockingMode, String pVariable, int pValue) throws SQLException {
         String msg1 = String.format("%s --> Setting value of %s to %d", threadName, pVariable, pValue);
-        String msg2 = String.format("%s --> Finished setting value of %s", threadName, pVariable);
         System.out.println(msg1);
         String sql = "UPDATE " + table_name + " SET " + value_field + "='" + pValue + "' WHERE " + name_field + "='" + pVariable + "'";
+        int rows = st.executeUpdate(sql);
+        String msg2 = String.format("%s --> Finished setting value of %s", threadName, pVariable);
         System.out.println(msg2);
-        return st.executeUpdate(sql) > 0;
+        return rows > 0;
     }
 
-    private void commit() throws SQLException{
+    private void commit() throws SQLException {
         String msg1 = String.format("%s --> Starting commit", threadName);
-        String msg2 = String.format("%s --> Finished commit", threadName);
         System.out.println(msg1);
         String sql = "COMMIT";
-        System.out.println(msg2);
         st.execute(sql);
-    }
-
-    private void rollback() throws SQLException{
-        String msg1 = String.format("%s --> Starting rollback", threadName);
-        String msg2 = String.format("%s --> Finished rollback", threadName);
-        System.out.println(msg1);
-        String sql = "ROLLBACK";
+        String msg2 = String.format("%s --> Finished commit", threadName);
         System.out.println(msg2);
-        st.execute(sql);
     }
 
-    private void increaseBarrierValue() throws SQLException {
-        setTransaction();
-        startTransaction();
-        int barrier = getValue(EXCLUSIVE_LOCKING, M);
-        setValue(EXCLUSIVE_LOCKING, M, barrier + 1);
-        commit();
+    private void rollback() {
+        try {
+            String msg1 = String.format("%s --> Starting rollback", threadName);
+            System.out.println(msg1);
+            String sql = "ROLLBACK";
+            st.execute(sql);
+            String msg2 = String.format("%s --> Finished rollback", threadName);
+            System.out.println(msg2);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
-    private void decreaseBarrierValue() throws SQLException {
-        setTransaction();
-        startTransaction();
-        int barrier = getValue(EXCLUSIVE_LOCKING, M);
-        setValue(EXCLUSIVE_LOCKING, M, barrier - 1);
-        commit();
+    private void increaseBarrierValue() {
+        try {
+            int barrier = getValue(EXCLUSIVE_LOCKING, M);
+            setValue(EXCLUSIVE_LOCKING, M, barrier + 1);
+            commit();
+        } catch (SQLException e) {
+            rollback();
+        }
     }
 
-    private int getBarrierValue() throws SQLException {
-        return getValue(SHARE_LOCKING, M);
+    private void decreaseBarrierValue() {
+        try {
+            int barrier = getValue(EXCLUSIVE_LOCKING, M);
+            setValue(EXCLUSIVE_LOCKING, M, barrier - 1);
+            commit();
+        } catch (SQLException e) {
+            rollback();
+        }
     }
 
-    public void syncronize() throws SQLException {
+    private int getBarrierValue() {
+        try {
+            int m = getValue(SHARE_LOCKING, M);
+            commit();
+            return m;
+        } catch (SQLException e) {
+            rollback();
+            return -1;
+        }
+    }
+
+    public void syncronize() {
         increaseBarrierValue();
         int barrierValue = getBarrierValue();
 
@@ -184,9 +187,10 @@ public class Data {
             setValue(EXCLUSIVE_MODE, E, 0);
             setValue(EXCLUSIVE_MODE, F, 0);
             setValue(EXCLUSIVE_MODE, M, 0);
+            commit();
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            rollback();
             return false;
         }
     }
@@ -203,37 +207,33 @@ public class Data {
             System.out.println("Initial value of " + D + ": " + Integer.toString(getValue(SHARE_MODE, D)));
             System.out.println("Initial value of " + E + ": " + Integer.toString(getValue(SHARE_MODE, E)));
             System.out.println("Initial value of " + F + ": " + Integer.toString(getValue(SHARE_MODE, F)));
+            commit();
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            rollback();
             return false;
         }
     }
 
     public boolean showFinalValues() {
-        try {
-            int barrierValue = getBarrierValue();
+        int barrierValue = getBarrierValue();
 
-            while (barrierValue < 1) {
-                try {
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(1, 11));
-                    barrierValue = getBarrierValue();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        while (barrierValue < 1) {
+            try {
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1, 11));
+                barrierValue = getBarrierValue();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+        }
 
-            while (barrierValue > 0) {
-                try {
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(1, 11));
-                    barrierValue = getBarrierValue();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        while (barrierValue > 0) {
+            try {
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1, 11));
+                barrierValue = getBarrierValue();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.exit(1);
         }
 
         try {
@@ -253,11 +253,13 @@ public class Data {
             System.out.println("Expected final value of " + Y + ": " + Integer.toString(0));
             System.out.println("Expected final value of " + Z + ": " + Integer.toString(0));
             System.out.println("Expected final value of " + T + ": " + Integer.toString(
-                            getValue(SHARE_MODE, A) +
+                    getValue(SHARE_MODE, A) +
                             getValue(SHARE_MODE, B) +
                             getValue(SHARE_MODE, C) +
                             getValue(SHARE_MODE, D) +
-                            getValue(SHARE_MODE, E)));
+                            getValue(SHARE_MODE, E) +
+                            getValue(SHARE_MODE, F)));
+            commit();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -265,49 +267,34 @@ public class Data {
         }
     }
 
-    public boolean procedureTest1(){
+    public boolean procedureTest1() {
         try {
-            setTransaction();
-            startTransaction();
             int a = getValue(EXCLUSIVE_MODE, A);
             setValue(EXCLUSIVE_MODE, A, a + 1);
             a = getValue(SHARE_MODE, A);
             commit();
             return true;
         } catch (SQLException e) {
-            try {
-                rollback();
-            } catch (SQLException e1) {
-                e.printStackTrace();
-            }
+            rollback();
             return false;
         }
     }
 
-    public boolean procedureTest2(){
+    public boolean procedureTest2() {
         try {
-            setTransaction();
-            startTransaction();
             int a = getValue(EXCLUSIVE_MODE, A);
             setValue(EXCLUSIVE_MODE, A, a + 2);
             a = getValue(SHARE_MODE, A);
             commit();
             return true;
         } catch (SQLException e) {
-            try {
-                rollback();
-            } catch (SQLException e1) {
-                e.printStackTrace();
-            }
+            rollback();
             return false;
         }
     }
 
     public boolean procedureA() {
         try {
-            setTransaction();
-            startTransaction();
-
             int x = getValue(EXCLUSIVE_MODE, X);
             x++;
             setValue(EXCLUSIVE_MODE, X, x);
@@ -322,20 +309,13 @@ public class Data {
             commit();
             return true;
         } catch (SQLException e) {
-            try {
-                rollback();
-            } catch (SQLException e1) {
-                e.printStackTrace();
-            }
+            rollback();
             return false;
         }
     }
 
     public boolean procedureB() {
         try {
-            setTransaction();
-            startTransaction();
-
             int y = getValue(EXCLUSIVE_MODE, Y);
             y++;
             setValue(EXCLUSIVE_MODE, Y, y);
@@ -350,20 +330,13 @@ public class Data {
             commit();
             return true;
         } catch (SQLException e) {
-            try {
-                rollback();
-            } catch (SQLException e1) {
-                e.printStackTrace();
-            }
+            rollback();
             return false;
         }
     }
 
     public boolean procedureC() {
         try {
-            setTransaction();
-            startTransaction();
-
             int z = getValue(EXCLUSIVE_MODE, Z);
             z++;
             setValue(EXCLUSIVE_MODE, Z, z);
@@ -378,20 +351,13 @@ public class Data {
             commit();
             return true;
         } catch (SQLException e) {
-            try {
-                rollback();
-            } catch (SQLException e1) {
-                e.printStackTrace();
-            }
+            rollback();
             return false;
         }
     }
 
     public boolean procedureD() {
         try {
-            setTransaction();
-            startTransaction();
-
             int t = getValue(EXCLUSIVE_MODE, T);
             int d = getValue(EXCLUSIVE_MODE, D);
             int z = getValue(SHARE_MODE, Z);
@@ -406,20 +372,13 @@ public class Data {
             commit();
             return true;
         } catch (SQLException e) {
-            try {
-                rollback();
-            } catch (SQLException e1) {
-                e.printStackTrace();
-            }
+            rollback();
             return false;
         }
     }
 
     public boolean procedureE() {
         try {
-            setTransaction();
-            startTransaction();
-
             int t = getValue(EXCLUSIVE_MODE, T);
             int e = getValue(EXCLUSIVE_MODE, E);
             int x = getValue(SHARE_MODE, X);
@@ -434,20 +393,13 @@ public class Data {
             commit();
             return true;
         } catch (SQLException e) {
-            try {
-                rollback();
-            } catch (SQLException e1) {
-                e.printStackTrace();
-            }
+            rollback();
             return false;
         }
     }
 
     public boolean procedureF() {
         try {
-            setTransaction();
-            startTransaction();
-
             int t = getValue(EXCLUSIVE_MODE, T);
             int f = getValue(EXCLUSIVE_MODE, F);
             int y = getValue(SHARE_MODE, Y);
@@ -462,11 +414,7 @@ public class Data {
             commit();
             return true;
         } catch (SQLException e) {
-            try {
-                rollback();
-            } catch (SQLException e1) {
-                e.printStackTrace();
-            }
+            rollback();
             return false;
         }
     }

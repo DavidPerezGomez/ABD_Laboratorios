@@ -8,19 +8,23 @@ public abstract class CustomThread extends Thread{
 
     public String name;
     public Data data;
+    public int iterations;
 
-    public CustomThread(int pMode, String pName) {
+    public CustomThread(int pMode, String pName, int pIterations) {
         name = pName;
         data = new Data(pMode == Data.LOCKING, name);
+        iterations = pIterations;
     }
 
     @Override
     public void run() {
         try {
             data.syncronize();
-            boolean res = myProcedure();
-            while (!res) {
-                res = myProcedure();
+            for (int i = 0; i < iterations; i++) {
+                boolean res = myProcedure();
+                while (!res) {
+                    res = myProcedure();
+                }
             }
             data.finish();
         } catch (SQLException e) {

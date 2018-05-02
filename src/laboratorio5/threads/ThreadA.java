@@ -2,8 +2,8 @@ package laboratorio5.threads;
 
 public class ThreadA extends CustomThread {
 
-    public ThreadA(int pMode) {
-        super(pMode, "A");
+    public ThreadA(int pMode, int pIterations) {
+        super(pMode, "A", pIterations);
     }
 
     @Override

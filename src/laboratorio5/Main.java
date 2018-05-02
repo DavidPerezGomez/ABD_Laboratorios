@@ -10,28 +10,22 @@ public class Main {
 
     public static void main(String[] args) {
         Data mainData = new Data(mode == Data.LOCKING, "main");
-        ThreadA threadA = new ThreadA(mode);
-        ThreadB threadB = new ThreadB(mode);
-        ThreadC threadC = new ThreadC(mode);
-        ThreadD threadD = new ThreadD(mode);
-        ThreadE threadE = new ThreadE(mode);
-        ThreadF threadF = new ThreadF(mode);
+        ThreadA threadA = new ThreadA(mode, NUMBER_OF_ITERATIONS);
+        ThreadB threadB = new ThreadB(mode, NUMBER_OF_ITERATIONS);
+        ThreadC threadC = new ThreadC(mode, NUMBER_OF_ITERATIONS);
+        ThreadD threadD = new ThreadD(mode, NUMBER_OF_ITERATIONS);
+        ThreadE threadE = new ThreadE(mode, NUMBER_OF_ITERATIONS);
+        ThreadF threadF = new ThreadF(mode, NUMBER_OF_ITERATIONS);
 
-        for (int i = 0; i < NUMBER_OF_ITERATIONS; i++) {
-            System.out.println("\n\nITERATION " + (i + 1) + "");
-            System.out.println("----------------");
-            mainData.initializeVariables();
-            mainData.showInitialValues();
+        mainData.initializeVariables();
+        mainData.showInitialValues();
 
-            new Thread(threadA).start();
-            new Thread(threadB).start();
-            new Thread(threadC).start();
-//            new Thread(threadD).start();
-//            new Thread(threadE).start();
-//            new Thread(threadF).start();
-
-            mainData.showFinalValues();
-        }
+//      new Thread(threadA).start();
+//      new Thread(threadB).start();
+//      new Thread(threadC).start();
+        new Thread(threadD).start();
+        new Thread(threadE).start();
+        new Thread(threadF).start();
     }
 
 }

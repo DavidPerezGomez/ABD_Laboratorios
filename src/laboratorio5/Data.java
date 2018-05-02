@@ -11,7 +11,7 @@ public class Data {
 
     private String server = "jdbc:mysql://";
 //    private String address = "192.168.56.11";
-    private String address = "192.168.1.37";
+    private String address = "127.0.0.1";
     private String user = "test";
     private String port = "8306";
     private String password = "";

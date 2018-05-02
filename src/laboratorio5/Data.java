@@ -11,9 +11,9 @@ public class Data {
 
     private String server = "jdbc:mysql://";
 //    private String address = "192.168.56.11";
-    private String address = "127.0.0.1";
+    private String address = "192.168.1.37";
     private String user = "test";
-    private String port = "3306";
+    private String port = "8306";
     private String password = "";
     private String database = "concurrency_control";
     private String table_name = "variables";
@@ -236,28 +236,39 @@ public class Data {
         }
 
         try {
-            System.out.println("Final value of " + X + ": " + Integer.toString(getValue(SHARE_MODE, X)));
-            System.out.println("Final value of " + Y + ": " + Integer.toString(getValue(SHARE_MODE, Y)));
-            System.out.println("Final value of " + Z + ": " + Integer.toString(getValue(SHARE_MODE, Z)));
-            System.out.println("Final value of " + T + ": " + Integer.toString(getValue(SHARE_MODE, T)));
+            int x, y, z, t, expected_t;
+            x = getValue(SHARE_MODE, X);
+            y = getValue(SHARE_MODE, Y);
+            z = getValue(SHARE_MODE, Z);
+            t = getValue(SHARE_MODE, T);
+            expected_t = getValue(SHARE_MODE, A) +
+                         getValue(SHARE_MODE, B) +
+                         getValue(SHARE_MODE, C) +
+                         getValue(SHARE_MODE, D) +
+                         getValue(SHARE_MODE, E) +
+                         getValue(SHARE_MODE, F);
+            String color;
+            String closer = "\033[0m";
             System.out.println("Final value of " + A + ": " + Integer.toString(getValue(SHARE_MODE, A)));
             System.out.println("Final value of " + B + ": " + Integer.toString(getValue(SHARE_MODE, B)));
             System.out.println("Final value of " + C + ": " + Integer.toString(getValue(SHARE_MODE, C)));
             System.out.println("Final value of " + D + ": " + Integer.toString(getValue(SHARE_MODE, D)));
             System.out.println("Final value of " + E + ": " + Integer.toString(getValue(SHARE_MODE, E)));
             System.out.println("Final value of " + F + ": " + Integer.toString(getValue(SHARE_MODE, F)));
+            color = (x == 0) ? "\033[32m" : "\033[31m";
+            System.out.println(color + "Final value of " + X + ": " + Integer.toString(x) + closer);
+            color = (y == 0) ? "\033[32m" : "\033[31m";
+            System.out.println(color + "Final value of " + Y + ": " + Integer.toString(y) + closer);
+            color = (z == 0) ? "\033[32m" : "\033[31m";
+            System.out.println(color + "Final value of " + Z + ": " + Integer.toString(z) + closer);
+            color = (t == expected_t) ? "\033[32m" : "\033[31m";
+            System.out.println(color + "Final value of " + T + ": " + Integer.toString(t) + closer);
 
 
             System.out.println("Expected final value of " + X + ": " + Integer.toString(0));
             System.out.println("Expected final value of " + Y + ": " + Integer.toString(0));
             System.out.println("Expected final value of " + Z + ": " + Integer.toString(0));
-            System.out.println("Expected final value of " + T + ": " + Integer.toString(
-                    getValue(SHARE_MODE, A) +
-                            getValue(SHARE_MODE, B) +
-                            getValue(SHARE_MODE, C) +
-                            getValue(SHARE_MODE, D) +
-                            getValue(SHARE_MODE, E) +
-                            getValue(SHARE_MODE, F)));
+            System.out.println("Expected final value of " + T + ": " + Integer.toString(expected_t));
             commit();
             return true;
         } catch (SQLException e) {

@@ -17,17 +17,21 @@ public class Main {
         ThreadE threadE = new ThreadE(mode);
         ThreadF threadF = new ThreadF(mode);
 
-        mainData.initializeVariables();
-        mainData.showInitialValues();
+        for (int i = 0; i < NUMBER_OF_ITERATIONS; i++) {
+            System.out.println("\n\nITERATION " + (i + 1) + "");
+            System.out.println("----------------");
+            mainData.initializeVariables();
+            mainData.showInitialValues();
 
-        new Thread(threadA).start();
-        new Thread(threadB).start();
-        new Thread(threadC).start();
-        new Thread(threadD).start();
-        new Thread(threadE).start();
-        new Thread(threadF).start();
+            new Thread(threadA).start();
+            new Thread(threadB).start();
+            new Thread(threadC).start();
+//            new Thread(threadD).start();
+//            new Thread(threadE).start();
+//            new Thread(threadF).start();
 
-        mainData.showFinalValues();
+            mainData.showFinalValues();
+        }
     }
 
 }

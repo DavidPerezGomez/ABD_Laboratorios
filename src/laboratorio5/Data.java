@@ -10,10 +10,10 @@ public class Data {
     private String threadName;
 
     private String server = "jdbc:mysql://";
-//    private String address = "192.168.56.11";
-    private String address = "127.0.0.1";
+    private String address = "192.168.56.11";
+//    private String address = "127.0.0.1";
     private String user = "test";
-    private String port = "8306";
+    private String port = "3306";
     private String password = "";
     private String database = "concurrency_control";
     private String table_name = "variables";
@@ -185,7 +185,7 @@ public class Data {
             setValue(EXCLUSIVE_MODE, D, 0);
             setValue(EXCLUSIVE_MODE, E, 0);
             setValue(EXCLUSIVE_MODE, F, 0);
-            setValue(EXCLUSIVE_MODE, M, 0);
+//            setValue(EXCLUSIVE_MODE, M, 0);
             commit();
             return true;
         } catch (SQLException e) {
